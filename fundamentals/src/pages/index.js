@@ -11,7 +11,6 @@ const { useEffect } = React;
 
 const IndexPage = () => {
   useEffect(() => {
-    console.log('Document is loaded');
     const main = () => {
       const canvas = document.querySelector('#c');
       const renderer = new THREE.WebGLRenderer({ canvas });
@@ -24,6 +23,9 @@ const IndexPage = () => {
       const camera = new THREE.PerspectiveCamera(fov, aspect, near, far);
       camera.position.z = 2;
 
+      // Scene https://threejs.org/manual/en/scenegraph.html
+      const scene = new THREE.Scene();
+
       // Light https://threejs.org/docs/#api/en/lights/Light
       {
         const color = 0xFFFFFF;
@@ -33,26 +35,40 @@ const IndexPage = () => {
         scene.add(light);
       }
 
-      // Scene https://threejs.org/manual/en/scenegraph.html
-      const scene = new THREE.Scene();
       // BoxGeometry
       const boxWidth = 1;
       const boxHeight = 1;
       const boxDepth = 1;
       const geometry = new THREE.BoxGeometry(boxWidth, boxHeight, boxDepth);
+
       // Material https://threejs.org/docs/#api/en/materials/Material
-      const material = new THREE.MeshPhongMaterial({color: 0x44aa88});
-      // Mesh https://threejs.org/docs/#api/en/objects/Mesh
-      const cube = new THREE.Mesh(geometry, material);
-      scene.add(cube);
-      // Renderer https://threejs.org/docs/#api/en/renderers/WebGLRenderer
-      renderer.render(scene, camera);
+      const makeInstance = (geometry, color, x) => {
+        const material = new THREE.MeshPhongMaterial({color});
+      
+        const cube = new THREE.Mesh(geometry, material);
+        scene.add(cube);
+      
+        cube.position.x = x;
+      
+        return cube;
+      }
+      const cubes = [
+        makeInstance(geometry, 0x44aa88,  0),
+        makeInstance(geometry, 0x8844aa, -2),
+        makeInstance(geometry, 0xaa8844,  2),
+      ];
+
       const render = (time) => {
         time *= 0.001;  // convert time to seconds
+ 
+        cubes.forEach((cube, ndx) => {
+          const speed = 1 + ndx * .1;
+          const rot = time * speed;
+          cube.rotation.x = rot;
+          cube.rotation.y = rot;
+        });
   
-        cube.rotation.x = time;
-        cube.rotation.y = time;
-  
+        // Renderer https://threejs.org/docs/#api/en/renderers/WebGLRenderer
         renderer.render(scene, camera);
   
         // https://developer.mozilla.org/en-US/docs/Web/API/window/requestAnimationFrame
