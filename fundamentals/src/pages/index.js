@@ -58,8 +58,25 @@ const IndexPage = () => {
         makeInstance(geometry, 0xaa8844,  2),
       ];
 
+      const resizeRendererToDisplaySize = (renderer) => {
+        const canvas = renderer.domElement;
+        const pixelRatio = window.devicePixelRatio;
+        const width = canvas.clientWidth * pixelRatio | 0;
+        const height = canvas.clientHeight * pixelRatio | 0;
+        const needResize = canvas.width !== width || canvas.height !== height;
+        if (needResize) {
+          renderer.setSize(width, height, false);
+        }
+        return needResize;
+      }
       const render = (time) => {
         time *= 0.001;  // convert time to seconds
+
+        if(resizeRendererToDisplaySize(renderer)) {
+          const canvas = renderer.domElement;
+          camera.aspect = canvas.clientWidth / canvas.clientHeight;
+          camera.updateProjectionMatrix();
+        }
  
         cubes.forEach((cube, ndx) => {
           const speed = 1 + ndx * .1;
@@ -81,7 +98,7 @@ const IndexPage = () => {
 
   return (
   <Layout>
-    <canvas id="c"></canvas>
+    <canvas id="c" className={styles.c}></canvas>
   </Layout>
 )}
 

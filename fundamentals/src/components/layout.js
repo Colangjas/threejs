@@ -27,7 +27,8 @@ const Layout = ({ children }) => {
       <Header siteTitle={data.site.siteMetadata?.title || `Title`} />
       <div
         style={{
-          margin: `0 auto`,
+          display: `grid`,
+          gridTemplateRows: `1fr auto`,
           maxWidth: `var(--size-content)`,
           padding: `var(--size-gutter)`,
         }}

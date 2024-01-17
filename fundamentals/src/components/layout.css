@@ -25,6 +25,10 @@
   --size-gutter: var(--space-5);
   --size-gap: var(--space-6);
 }
+html, body {
+  margin: 0;
+  height: 100%;
+}
 html {
   -webkit-text-size-adjust: 100%;
   box-sizing: border-box;
@@ -42,6 +46,8 @@ body {
   font-weight: normal;
   margin: 0;
   word-wrap: break-word;
+  display: grid;
+  grid-template-rows: auto 1fr;
 }
 a {
   background-color: transparent;
