@@ -6,93 +6,174 @@ import Layout from "../components/layout"
 import Seo from "../components/seo"
 import * as styles from "../components/index.module.css"
 import * as THREE from 'three';
+import { TextGeometry } from 'three-stdlib';
+import { FontLoader } from 'three-stdlib';
 
 const { useEffect } = React;
 
 const IndexPage = () => {
   useEffect(() => {
     const main = () => {
-      const canvas = document.querySelector('#c');
-      const renderer = new THREE.WebGLRenderer({ canvas });
-      // PerspectiveCamera https://threejs.org/docs/#api/en/cameras/PerspectiveCamera
-      const fov = 75;
-      // https://threejs.org/manual/en/responsive.html
-      const aspect = 2;  // the canvas default
+      const canvas = document.querySelector( '#c' );
+      const renderer = new THREE.WebGLRenderer( { antialias: true, canvas } );
+    
+      const fov = 40;
+      const aspect = 2; // the canvas default
       const near = 0.1;
-      const far = 5;
-      const camera = new THREE.PerspectiveCamera(fov, aspect, near, far);
-      camera.position.z = 2;
-
-      // Scene https://threejs.org/manual/en/scenegraph.html
+      const far = 1000;
+      const camera = new THREE.PerspectiveCamera( fov, aspect, near, far );
+      camera.position.z = 40;
+    
       const scene = new THREE.Scene();
-
-      // Light https://threejs.org/docs/#api/en/lights/Light
+      scene.background = new THREE.Color( 0xAAAAAA );
+    
       {
+    
         const color = 0xFFFFFF;
         const intensity = 3;
-        const light = new THREE.DirectionalLight(color, intensity);
-        light.position.set(-1, 2, 4);
-        scene.add(light);
+        const light = new THREE.DirectionalLight( color, intensity );
+        light.position.set( - 1, 2, 4 );
+        scene.add( light );
+    
       }
-
-      // BoxGeometry
-      const boxWidth = 1;
-      const boxHeight = 1;
-      const boxDepth = 1;
-      const geometry = new THREE.BoxGeometry(boxWidth, boxHeight, boxDepth);
-
-      // Material https://threejs.org/docs/#api/en/materials/Material
-      const makeInstance = (geometry, color, x) => {
-        const material = new THREE.MeshPhongMaterial({color});
-      
-        const cube = new THREE.Mesh(geometry, material);
-        scene.add(cube);
-      
-        cube.position.x = x;
-      
-        return cube;
+    
+      {
+    
+        const color = 0xFFFFFF;
+        const intensity = 3;
+        const light = new THREE.DirectionalLight( color, intensity );
+        light.position.set( 1, - 2, - 4 );
+        scene.add( light );
+    
       }
-      const cubes = [
-        makeInstance(geometry, 0x44aa88,  0),
-        makeInstance(geometry, 0x8844aa, -2),
-        makeInstance(geometry, 0xaa8844,  2),
-      ];
-
-      const resizeRendererToDisplaySize = (renderer) => {
-        const canvas = renderer.domElement;
-        const pixelRatio = window.devicePixelRatio;
-        const width = canvas.clientWidth * pixelRatio | 0;
-        const height = canvas.clientHeight * pixelRatio | 0;
-        const needResize = canvas.width !== width || canvas.height !== height;
-        if (needResize) {
-          renderer.setSize(width, height, false);
+    
+      const objects = [];
+      const spread = 15;
+    
+      function addObject( x, y, obj ) {
+    
+        obj.position.x = x * spread;
+        obj.position.y = y * spread;
+    
+        scene.add( obj );
+        objects.push( obj );
+    
+      }
+    
+      function createMaterial() {
+    
+        const material = new THREE.MeshPhongMaterial( {
+          side: THREE.DoubleSide,
+        } );
+    
+        const hue = Math.random();
+        const saturation = 1;
+        const luminance = .5;
+        material.color.setHSL( hue, saturation, luminance );
+    
+        return material;
+    
+      }
+    
+      function addSolidGeometry( x, y, geometry ) {
+    
+        const mesh = new THREE.Mesh( geometry, createMaterial() );
+        addObject( x, y, mesh );
+    
+      }
+    
+      {
+    
+        const loader = new FontLoader();
+        // promisify font loading
+        function loadFont( url ) {
+    
+          return new Promise( ( resolve, reject ) => {
+    
+            loader.load( url, resolve, undefined, reject );
+    
+          } );
+    
         }
-        return needResize;
+    
+        async function doit() {
+    
+          const font = await loadFont( 'https://threejs.org/examples/fonts/helvetiker_regular.typeface.json' ); 
+          const geometry = new TextGeometry( 'three.js', {
+            font: font,
+            size: 3.0,
+            height: .2,
+            curveSegments: 12,
+            bevelEnabled: true,
+            bevelThickness: 0.15,
+            bevelSize: .3,
+            bevelSegments: 5,
+          } );
+    
+          addSolidGeometry( - .5, 0, geometry );
+    
+          const mesh = new THREE.Mesh( geometry, createMaterial() );
+          geometry.computeBoundingBox();
+          geometry.boundingBox.getCenter( mesh.position ).multiplyScalar( - 1 );
+    
+          const parent = new THREE.Object3D();
+          parent.add( mesh );
+    
+          addObject( .5, 0, parent );
+    
+        }
+    
+        doit();
+    
       }
-      const render = (time) => {
-        time *= 0.001;  // convert time to seconds
-
-        if(resizeRendererToDisplaySize(renderer)) {
+    
+      function resizeRendererToDisplaySize( renderer ) {
+    
+        const canvas = renderer.domElement;
+        const width = canvas.clientWidth;
+        const height = canvas.clientHeight;
+        const needResize = canvas.width !== width || canvas.height !== height;
+        if ( needResize ) {
+    
+          renderer.setSize( width, height, false );
+    
+        }
+    
+        return needResize;
+    
+      }
+    
+      function render( time ) {
+    
+        time *= 0.001;
+    
+        if ( resizeRendererToDisplaySize( renderer ) ) {
+    
           const canvas = renderer.domElement;
           camera.aspect = canvas.clientWidth / canvas.clientHeight;
           camera.updateProjectionMatrix();
+    
         }
- 
-        cubes.forEach((cube, ndx) => {
-          const speed = 1 + ndx * .1;
+    
+        objects.forEach( ( obj, ndx ) => {
+    
+          const speed = .5 + ndx * .05;
           const rot = time * speed;
-          cube.rotation.x = rot;
-          cube.rotation.y = rot;
-        });
-  
-        // Renderer https://threejs.org/docs/#api/en/renderers/WebGLRenderer
-        renderer.render(scene, camera);
-  
-        // https://developer.mozilla.org/en-US/docs/Web/API/window/requestAnimationFrame
-        requestAnimationFrame(render);
+          obj.rotation.x = rot;
+          obj.rotation.y = rot;
+    
+        } );
+    
+        renderer.render( scene, camera );
+    
+        requestAnimationFrame( render );
+    
       }
-      requestAnimationFrame(render);
+    
+      requestAnimationFrame( render );
+    
     }
+    
     main();
   }, []);
 
