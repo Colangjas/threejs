@@ -6,8 +6,9 @@ import Layout from "../components/layout"
 import Seo from "../components/seo"
 import * as styles from "../components/index.module.css"
 import * as THREE from 'three';
-import { TextGeometry } from 'three-stdlib';
-import { FontLoader } from 'three-stdlib';
+// import { TextGeometry } from 'three-stdlib';
+// import { FontLoader } from 'three-stdlib';
+import { GUI } from 'dat.gui';
 
 const { useEffect } = React;
 
@@ -16,6 +17,7 @@ const IndexPage = () => {
     const main = () => {
       const canvas = document.querySelector( '#c' );
       const renderer = new THREE.WebGLRenderer( { antialias: true, canvas } );
+      const gui = new GUI();
     
       const fov = 40;
       const aspect = 2; // the canvas default
@@ -63,7 +65,6 @@ const IndexPage = () => {
 
       const earthMaterial = new THREE.MeshPhongMaterial({color: 0x2233FF, emissive: 0x112244});
       const earthMesh = new THREE.Mesh(sphereGeometry, earthMaterial);
-      earthMesh.position.x = 10;
       earthOrbit.add(earthMesh);
       objects.push(earthMesh);
 
@@ -76,6 +77,52 @@ const IndexPage = () => {
       moonMesh.scale.set(.5, .5, .5);
       moonOrbit.add(moonMesh);
       objects.push(moonMesh);
+
+      class AxisGridHelper {
+        constructor(node, units = 10) {
+          const axes = new THREE.AxesHelper();
+          axes.material.depthTest = false;
+          axes.renderOrder = 2;
+          node.add(axes);
+
+          const grid = new THREE.GridHelper(units, units);
+          grid.material.depthTest = false;
+          grid.renderOrder = 1;
+          node.add(grid);
+
+          this.grid = grid;
+          this.axes = axes;
+          this.visible = false;
+        }
+        get visible() {
+          return this._visible;
+        }
+        set visible(v) {
+          this._visible = v;
+          this.grid.visible = v;
+          this.axes.visible = v;
+        }
+      }
+      // objects.forEach((node) => {
+      //   const axes = new THREE.AxesHelper();
+      //   axes.material.depthTest = false;
+      //   axes.renderOrder = 1;
+      //   node.add(axes);
+      // });
+
+      const makeAxisGrid = (node, label, units) => {
+        const helper = new AxisGridHelper(node, units);
+        gui.add(helper, 'visible').name(label);
+      }
+
+      makeAxisGrid(solarSystem, 'solarSystem', 25);
+      makeAxisGrid(sunMesh, 'sunMesh');
+      makeAxisGrid(earthOrbit, 'earthOrbit');
+      makeAxisGrid(earthMesh, 'earthMesh');
+      makeAxisGrid(moonOrbit, 'moonOrbit');
+      makeAxisGrid(moonMesh, 'moonMesh');
+
+
     
       function resizeRendererToDisplaySize( renderer ) {
     
