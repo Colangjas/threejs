@@ -22,110 +22,60 @@ const IndexPage = () => {
       const near = 0.1;
       const far = 1000;
       const camera = new THREE.PerspectiveCamera( fov, aspect, near, far );
-      camera.position.z = 40;
+      camera.position.set( 0, 50, 0 );
+      camera.up.set( 0, 0, 1 );
+      camera.lookAt( 0, 0, 0 );
     
       const scene = new THREE.Scene();
-      scene.background = new THREE.Color( 0xAAAAAA );
     
       {
     
         const color = 0xFFFFFF;
-        const intensity = 3;
-        const light = new THREE.DirectionalLight( color, intensity );
-        light.position.set( - 1, 2, 4 );
+        const intensity = 500;
+        const light = new THREE.PointLight( color, intensity );
         scene.add( light );
     
       }
     
-      {
-    
-        const color = 0xFFFFFF;
-        const intensity = 3;
-        const light = new THREE.DirectionalLight( color, intensity );
-        light.position.set( 1, - 2, - 4 );
-        scene.add( light );
-    
-      }
-    
+      // an array of objects who's rotation to update
       const objects = [];
-      const spread = 15;
     
-      function addObject( x, y, obj ) {
+      const radius = 1;
+      const widthSegments = 6;
+      const heightSegments = 6;
+      const sphereGeometry = new THREE.SphereGeometry(
+      radius, widthSegments, heightSegments );
+
+      const solarSystem = new THREE.Object3D();
+      scene.add(solarSystem);
+      objects.push(solarSystem);
     
-        obj.position.x = x * spread;
-        obj.position.y = y * spread;
-    
-        scene.add( obj );
-        objects.push( obj );
-    
-      }
-    
-      function createMaterial() {
-    
-        const material = new THREE.MeshPhongMaterial( {
-          side: THREE.DoubleSide,
-        } );
-    
-        const hue = Math.random();
-        const saturation = 1;
-        const luminance = .5;
-        material.color.setHSL( hue, saturation, luminance );
-    
-        return material;
-    
-      }
-    
-      function addSolidGeometry( x, y, geometry ) {
-    
-        const mesh = new THREE.Mesh( geometry, createMaterial() );
-        addObject( x, y, mesh );
-    
-      }
-    
-      {
-    
-        const loader = new FontLoader();
-        // promisify font loading
-        function loadFont( url ) {
-    
-          return new Promise( ( resolve, reject ) => {
-    
-            loader.load( url, resolve, undefined, reject );
-    
-          } );
-    
-        }
-    
-        async function doit() {
-    
-          const font = await loadFont( 'https://threejs.org/examples/fonts/helvetiker_regular.typeface.json' ); 
-          const geometry = new TextGeometry( 'three.js', {
-            font: font,
-            size: 3.0,
-            height: .2,
-            curveSegments: 12,
-            bevelEnabled: true,
-            bevelThickness: 0.15,
-            bevelSize: .3,
-            bevelSegments: 5,
-          } );
-    
-          addSolidGeometry( - .5, 0, geometry );
-    
-          const mesh = new THREE.Mesh( geometry, createMaterial() );
-          geometry.computeBoundingBox();
-          geometry.boundingBox.getCenter( mesh.position ).multiplyScalar( - 1 );
-    
-          const parent = new THREE.Object3D();
-          parent.add( mesh );
-    
-          addObject( .5, 0, parent );
-    
-        }
-    
-        doit();
-    
-      }
+      const sunMaterial = new THREE.MeshPhongMaterial( { emissive: 0xFFFF00 } );
+      const sunMesh = new THREE.Mesh( sphereGeometry, sunMaterial );
+      sunMesh.scale.set( 5, 5, 5 );
+      solarSystem.add(sunMesh);
+      objects.push( sunMesh );
+
+      const earthOrbit = new THREE.Object3D();
+      earthOrbit.position.x = 10;
+      solarSystem.add(earthOrbit);
+      objects.push(earthOrbit);
+
+      const earthMaterial = new THREE.MeshPhongMaterial({color: 0x2233FF, emissive: 0x112244});
+      const earthMesh = new THREE.Mesh(sphereGeometry, earthMaterial);
+      earthMesh.position.x = 10;
+      earthOrbit.add(earthMesh);
+      objects.push(earthMesh);
+
+      const moonOrbit = new THREE.Object3D();
+      moonOrbit.position.x = 2;
+      earthOrbit.add(moonOrbit);
+
+      const moonMaterial = new THREE.MeshPhongMaterial({color: 0x888888, emissive: 0x222222});
+      const moonMesh = new THREE.Mesh(sphereGeometry, moonMaterial);
+      moonMesh.scale.set(.5, .5, .5);
+      moonOrbit.add(moonMesh);
+      objects.push(moonMesh);
     
       function resizeRendererToDisplaySize( renderer ) {
     
@@ -155,12 +105,9 @@ const IndexPage = () => {
     
         }
     
-        objects.forEach( ( obj, ndx ) => {
+        objects.forEach( ( obj ) => {
     
-          const speed = .5 + ndx * .05;
-          const rot = time * speed;
-          obj.rotation.x = rot;
-          obj.rotation.y = rot;
+          obj.rotation.y = time;
     
         } );
     
