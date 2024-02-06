@@ -228,3 +228,7 @@ pre tt:before,
 pre tt:after {
   content: none;
 }
+
+canvas {
+  max-height: 80vh;
+}
